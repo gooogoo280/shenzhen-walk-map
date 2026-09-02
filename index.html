@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>走遍深圳 · 打卡地图</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f6f7f9;
+  --fg: #1c2430;
+  --card: #ffffff;
+  --border: #dfe4eb;
+  --muted: #697386;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #10141b;
+    --fg: #e8ecf3;
+    --card: #171c26;
+    --border: #2a3242;
+    --muted: #9aa5b6;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 22px 16px 70px; }
+h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: 0.5px; }
+.sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+#map { height: 340px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--card); }
+.legend { font-size: 12px; color: var(--muted); margin: 8px 2px 12px; line-height: 1.6; }
+.bar { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.track { flex: 1; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; }
+.fill { height: 100%; width: 0%; border-radius: 99px; background: var(--fg); transition: width 0.2s ease; }
+.cnt { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.reset {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.reset:hover { color: var(--fg); border-color: var(--fg); }
+.search {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 14px;
+}
+.search:focus { outline: 2px solid color-mix(in srgb, var(--fg) 35%, transparent); outline-offset: 1px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; }
+.tab {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tab[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tab .n { font-size: 11px; opacity: 0.7; margin-left: 4px; }
+.group { margin: 20px 0 2px; font-size: 15px; font-weight: 500; display: flex; align-items: baseline; gap: 8px; }
+.gsub { font-size: 12px; color: var(--muted); }
+ul { list-style: none; margin: 6px 0 0; padding: 0; }
+li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 10px 2px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+li label { display: flex; gap: 10px; align-items: flex-start; flex: 1; cursor: pointer; min-width: 0; }
+li input[type="checkbox"] { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--fg); flex: none; }
+.body { min-width: 0; }
+.hd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.nm { font-size: 14px; font-weight: 500; }
+.tag {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  color: var(--tagc, #777);
+  background: color-mix(in srgb, var(--tagc, #777) 14%, transparent);
+  white-space: nowrap;
+}
+.ds { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.55; }
+li.done .nm { text-decoration: line-through; color: var(--muted); }
+.note {
+  flex: 1 1 100%;
+  margin: 4px 0 0 28px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  resize: vertical;
+}
+.note::placeholder { color: var(--muted); opacity: 0.8; }
+.note:focus { outline: 2px solid color-mix(in srgb, var(--fg) 30%, transparent); outline-offset: 1px; }
+li.has-note .note {
+  border-color: var(--note-c, var(--fg));
+  background: color-mix(in srgb, var(--note-c, var(--fg)) 5%, var(--card));
+}
+.link {
+  font-size: 12px;
+  margin-left: auto;
+  flex: none;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+.link:hover { color: var(--fg); border-color: var(--fg); }
+.empty { color: var(--muted); font-size: 13px; padding: 14px 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>走遍深圳 · 打卡地图</h1>
+  <p class="sub">以深大丽湖为原点——每到一个地方就打一个勾，在条目下方的笔记栏记录你的发现。进度和笔记都会自动保存在本机浏览器里。</p>
+  <div id="map"></div>
+  <p class="legend">大圆点 = 区域中心，小圆点 = 地标锚点；点击地图上的点可筛选对应分区。每个条目点「查看位置」会打开高德地图搜索（手机上会直接唤起高德 App）。</p>
+  <div class="bar">
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <span class="cnt" id="cnt"></span>
+    <span class="cnt" id="notesCnt"></span>
+    <button class="reset" id="reset" type="button">重置</button>
+  </div>
+  <input class="search" id="search" type="search" placeholder="搜索站点、主题或关键词…">
+  <div class="tabs" id="tabs" role="group" aria-label="分区筛选"></div>
+  <div id="list"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
