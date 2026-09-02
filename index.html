@@ -36,6 +36,7 @@ h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: 0.5px; }
 #map { height: 340px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--card); }
 .legend { font-size: 12px; color: var(--muted); margin: 8px 2px 12px; line-height: 1.6; }
 .bar { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 .track { flex: 1; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; }
 .fill { height: 100%; width: 0%; border-radius: 99px; background: var(--fg); transition: width 0.2s ease; }
 .cnt { font-size: 12px; color: var(--muted); white-space: nowrap; }
@@ -186,6 +187,12 @@ li.has-note .note {
     <span class="cnt" id="cnt"></span>
     <span class="cnt" id="notesCnt"></span>
     <button class="reset" id="reset" type="button">重置</button>
+  </div>
+  <div class="actions">
+    <button class="reset" id="exportBackup" type="button">导出备份</button>
+    <button class="reset" id="importBackup" type="button">导入备份</button>
+    <button class="reset" id="exportNotes" type="button">导出笔记</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
   </div>
   <input class="search" id="search" type="search" placeholder="搜索站点、主题或关键词…">
   <div class="tabs" id="tabs" role="group" aria-label="分区筛选"></div>

@@ -770,6 +770,78 @@ function updateNotesCount() {
   if (el) { el.textContent = '笔记 ' + notesCount() + ' / ' + total; }
 }
 
+function dateStamp() {
+  var d = new Date();
+  var m = String(d.getMonth() + 1).padStart(2, '0');
+  var day = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + m + '-' + day;
+}
+
+function downloadFile(name, text, mime) {
+  if (typeof Blob === 'undefined' || typeof URL === 'undefined') { return; }
+  var blob = new Blob([text], { type: mime });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+function buildBackup() {
+  return {
+    app: 'walk-sz',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    done: Array.from(done),
+    notes: notes
+  };
+}
+
+function parseBackup(text) {
+  var d = JSON.parse(text);
+  if (!d || d.app !== 'walk-sz' || !Array.isArray(d.done) || typeof d.notes !== 'object') {
+    throw new Error('bad backup');
+  }
+  return d;
+}
+
+function applyBackup(d) {
+  done = new Set(d.done);
+  notes = d.notes || {};
+  saveDone();
+  saveNotes();
+  renderTabs();
+  renderList();
+}
+
+function buildNotesMarkdown() {
+  var lines = [];
+  lines.push('# 走遍深圳 · 我的档案导出');
+  lines.push('');
+  lines.push('- 导出时间：' + new Date().toLocaleString('zh-CN'));
+  lines.push('- 完成：' + done.size + ' / ' + total + '，笔记：' + notesCount() + ' 条');
+  lines.push('');
+  GROUPS.forEach(function (grp) {
+    var items = ITEMS.filter(function (i) { return i.g === grp.key; });
+    lines.push('## ' + grp.label + '（已完成 ' + doneFor(grp.key) + ' / ' + countFor(grp.key) + '）');
+    lines.push('');
+    items.forEach(function (it) {
+      lines.push('- ' + (done.has(it.id) ? '[x]' : '[ ]') + ' **' + it.n + '**（' + it.t + '）');
+      var noteText = String(notes[it.id] || '').trim();
+      if (noteText) {
+        noteText.split('\n').forEach(function (seg) {
+          lines.push('  - 笔记：' + seg);
+        });
+      }
+    });
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
 function countFor(g) {
   return ITEMS.filter(function (i) { return i.g === g; }).length;
 }
@@ -1013,6 +1085,36 @@ $('reset').addEventListener('click', function () {
   saveNotes();
   renderTabs();
   renderList();
+});
+
+$('exportBackup').addEventListener('click', function () {
+  downloadFile('走遍深圳-备份-' + dateStamp() + '.json', JSON.stringify(buildBackup(), null, 2), 'application/json');
+});
+
+$('importBackup').addEventListener('click', function () {
+  $('importFile').click();
+});
+
+$('importFile').addEventListener('change', function () {
+  var file = this.files && this.files[0];
+  if (!file) { return; }
+  var reader = new FileReader();
+  reader.onload = function () {
+    try {
+      var d = parseBackup(String(reader.result));
+      if (!window.confirm('导入将覆盖当前所有的打卡和笔记记录，确定继续吗？')) { return; }
+      applyBackup(d);
+      window.alert('导入成功：完成 ' + done.size + ' / ' + total + '，笔记 ' + notesCount() + ' 条。');
+    } catch (e) {
+      window.alert('导入失败：文件格式不正确，请选择「导出备份」生成的文件。');
+    }
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+$('exportNotes').addEventListener('click', function () {
+  downloadFile('走遍深圳-笔记-' + dateStamp() + '.md', buildNotesMarkdown(), 'text/markdown');
 });
 
 $('search').addEventListener('input', function () {
