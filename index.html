@@ -117,6 +117,49 @@ li.has-note .note {
   border-color: var(--note-c, var(--fg));
   background: color-mix(in srgb, var(--note-c, var(--fg)) 5%, var(--card));
 }
+.xp-toggle {
+  flex: 1 1 100%;
+  margin: 4px 0 0 28px;
+  width: fit-content;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+.xp-toggle:hover,
+.xp-toggle[aria-expanded="true"] {
+  color: var(--fg);
+  border-color: var(--fg);
+}
+.xp-panel {
+  flex: 1 1 100%;
+  margin: 2px 0 0 28px;
+  padding: 10px 12px;
+  border-left: 2px solid color-mix(in srgb, var(--note-c, var(--fg)) 45%, transparent);
+  border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--note-c, var(--fg)) 5%, var(--card));
+}
+.xp-row {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.xk {
+  flex: none;
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  color: var(--note-c, var(--fg));
+  background: color-mix(in srgb, var(--note-c, var(--fg)) 16%, transparent);
+}
+.xv { min-width: 0; }
 .link {
   font-size: 12px;
   margin-left: auto;
