@@ -784,6 +784,7 @@ GROUPS.forEach(function (x) { G[x.key] = x; });
 var state = { group: 'all', q: '' };
 var done = new Set();
 var notes = {};
+var thought = localStorage.getItem('walk-sz-thought') || '把家门口走透，你就拿到了理解世界的钥匙。';
 try {
   var raw = localStorage.getItem('walk-sz-done');
   if (raw) { done = new Set(JSON.parse(raw)); }
@@ -804,6 +805,10 @@ function saveDone() {
 
 function saveNotes() {
   try { localStorage.setItem('walk-sz-notes', JSON.stringify(notes)); } catch (e) { /* ignore */ }
+}
+
+function saveThought() {
+  try { localStorage.setItem('walk-sz-thought', thought); } catch (e) { /* ignore */ }
 }
 
 function notesCount() {
@@ -845,7 +850,8 @@ function buildBackup() {
     version: 1,
     exportedAt: new Date().toISOString(),
     done: Array.from(done),
-    notes: notes
+    notes: notes,
+    thought: thought
   };
 }
 
@@ -860,8 +866,14 @@ function parseBackup(text) {
 function applyBackup(d) {
   done = new Set(d.done);
   notes = d.notes || {};
+  if (typeof d.thought === 'string') {
+    thought = d.thought;
+    var el = $('thought');
+    if (el) { el.value = thought; }
+  }
   saveDone();
   saveNotes();
+  saveThought();
   renderTabs();
   renderList();
 }
@@ -872,6 +884,7 @@ function buildNotesMarkdown() {
   lines.push('');
   lines.push('- 导出时间：' + new Date().toLocaleString('zh-CN'));
   lines.push('- 完成：' + done.size + ' / ' + total + '，笔记：' + notesCount() + ' 条');
+  lines.push('- 想法：' + (String(thought).trim() || '（无）'));
   lines.push('');
   GROUPS.forEach(function (grp) {
     var items = ITEMS.filter(function (i) { return i.g === grp.key; });
@@ -1165,6 +1178,15 @@ $('importFile').addEventListener('change', function () {
 $('exportNotes').addEventListener('click', function () {
   downloadFile('走遍深圳-笔记-' + dateStamp() + '.md', buildNotesMarkdown(), 'text/markdown');
 });
+
+var thoughtEl = $('thought');
+if (thoughtEl) {
+  thoughtEl.value = thought;
+  thoughtEl.addEventListener('input', function () {
+    thought = this.value;
+    saveThought();
+  });
+}
 
 $('search').addEventListener('input', function () {
   state.q = this.value;
